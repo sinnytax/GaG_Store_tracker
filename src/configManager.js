@@ -12,10 +12,39 @@ function setShopChannel(channelId) {
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 }
 
-function setShopRole(roleId) {
+function addShopRole(roleId) {
   const config = getConfig();
-  config.shopRoleId = roleId;
+  if (!config.shopRoleIds.includes(roleId)) {
+    config.shopRoleIds.push(roleId);
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+  }
+}
+
+function removeShopRole(roleId) {
+  const config = getConfig();
+  config.shopRoleIds = config.shopRoleIds.filter(id => id !== roleId);
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+}
+function setItemRole(itemName, roleId) {
+  const config = getConfig();
+  config.itemRoleMap = config.itemRoleMap || {};
+  config.itemRoleMap[itemName] = roleId;
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 }
 
-module.exports = { getConfig, setShopChannel, setShopRole };
+function removeItemRole(itemName) {
+  const config = getConfig();
+  config.itemRoleMap = config.itemRoleMap || {};
+  delete config.itemRoleMap[itemName];
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+}
+
+module.exports = {
+  getConfig,
+  setShopChannel,
+  addShopRole,
+  removeShopRole,
+  setItemRole,
+  removeItemRole
+};
+

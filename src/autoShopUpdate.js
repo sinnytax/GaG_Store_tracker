@@ -2,10 +2,9 @@ const { formatStockEmbed, fetchInStockItems } = require('./stock');
 const { getConfig } = require('./configManager');
 
 let previousSerialized = null;
-let lastMessage = null;
 
 async function autoUpdateShop(client) {
-  const { shopChannelId, shopRoleId } = getConfig();
+  const { shopChannelId, itemRoleMap } = getConfig();
   if (!shopChannelId) return;
 
   const channel = await client.channels.fetch(shopChannelId).catch(console.error);
@@ -22,21 +21,22 @@ async function autoUpdateShop(client) {
       console.log(`[Shop] Detected update — sending new message.`);
 
       const embed = formatStockEmbed(data);
-      const content = shopRoleId ? `<@&${shopRoleId}> Shop has been updated!` : null;
 
-      // 🗑️ Delete previous message
-      if (lastMessage && !lastMessage.deleted) {
-        await lastMessage.delete().catch(err => {
-          console.warn('Could not delete previous message:', err.message);
-        });
-      }
+      // 🔍 Check which items are in stock and build a dynamic mention list
+      const roleMentions = new Set();
+      const allItems = [...(data.seeds || []), ...(data.gear || []), ...(data.honey || []), ...(data.cosmetics || []), ...(data.egg || [])];
 
-      // ✉️ Send new message
-      lastMessage = await channel.send({ content, embeds: [embed] }).catch(console.error);
+      allItems.forEach(item => {
+        const roleId = itemRoleMap?.[item.name];
+        if (roleId) roleMentions.add(`<@&${roleId}>`);
+      });
 
+      const content = Array.from(roleMentions).join(' ') || null;
+
+      await channel.send({ content, embeds: [embed] }).catch(console.error);
       previousSerialized = currentSerialized;
     }
-  }, 30000); // every 30 seconds
+  }, 30000);
 }
 
 module.exports = { autoUpdateShop };
