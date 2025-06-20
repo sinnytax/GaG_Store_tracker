@@ -1,4 +1,5 @@
 require('dotenv').config();
+const express = require('express');        // Add this
 const { Client, GatewayIntentBits, Events } = require('discord.js');
 const { fetchInStockItems, formatStockEmbed } = require('./src/stock');
 const { autoUpdateShop } = require('./src/autoShopUpdate');
@@ -12,6 +13,20 @@ const client = new Client({
         GatewayIntentBits.MessageContent
     ]
 });
+
+// Simple Express server to listen on port 3000
+const app = express();
+
+app.get('/', (req, res) => {
+    res.send('Bot is running!');
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`HTTP server listening on port ${PORT}`);
+});
+
+// Discord bot event handlers below
 
 client.on(Events.MessageCreate, async (message) => {
     if (message.author.bot || !message.content.startsWith('.')) return;
@@ -35,11 +50,11 @@ client.on(Events.MessageCreate, async (message) => {
             break;
         case 'additemrole': {
             if (!message.member.permissions.has('Administrator')) return message.reply('❌ Admin only.');
-        
+
             const [itemName, roleMention] = args;
             const role = message.mentions.roles.first();
             if (!itemName || !role) return message.reply('❌ Usage: `!additemrole <ItemName> @Role`');
-        
+
             addItemRole(itemName, role.id);
             return message.reply(`✅ Now pinging <@&${role.id}> when **${itemName}** is in stock.`);
         }
@@ -47,7 +62,7 @@ client.on(Events.MessageCreate, async (message) => {
             if (!message.member.permissions.has('Administrator')) return message.reply('❌ Admin only.');
             const itemName = args.join(' ');
             if (!itemName) return message.reply('❌ Usage: `!removeitemrole <ItemName>`');
-        
+
             removeItemRole(itemName);
             return message.reply(`✅ No longer pinging for **${itemName}**.`);
         }
