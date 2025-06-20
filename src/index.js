@@ -3,7 +3,7 @@ const { Client, GatewayIntentBits, Events } = require('discord.js');
 const { fetchInStockItems, formatStockEmbed } = require('./stock');
 const { autoUpdateShop } = require('./autoShopUpdate');
 const { setShopChannel, addShopRole, removeShopRole, addItemRole, removeItemRole } = require('./configManager');
-
+const fs = require("fs");
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -13,7 +13,7 @@ const client = new Client({
 });
 
 client.on(Events.MessageCreate, async (message) => {
-    if (message.author.bot || !message.content.startsWith('!')) return;
+    if (message.author.bot || !message.content.startsWith('.')) return;
   
     const args = message.content.slice(1).trim().split(/ +/);
     const command = args.shift().toLowerCase();
@@ -51,6 +51,12 @@ client.on(Events.MessageCreate, async (message) => {
           removeItemRole(itemName);
           return message.reply(`✅ No longer pinging for **${itemName}**.`);
         }
+
+        case "config":
+          const rawData = fs.readFileSync("config.json", "utf-8");
+          const data = JSON.parse(rawData);
+
+          message.reply(String(rawData))
 
     }
   });
