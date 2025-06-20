@@ -16,27 +16,23 @@ async function autoUpdateShop(client) {
   setInterval(async () => {
     const data = await fetchInStockItems();
     const currentSerialized = JSON.stringify(data);
+    if (currentSerialized === previousSerialized) return;
 
-    if (currentSerialized !== previousSerialized) {
-      console.log(`[Shop] Detected update — sending new message.`);
+    previousSerialized = currentSerialized;
 
-      const embed = formatStockEmbed(data);
+    const allItems = [...(data.seeds || []), ...(data.gear || []), ...(data.egg || []), ...(data.honey || []), ...(data.cosmetics || [])];
 
-      // 🔍 Check which items are in stock and build a dynamic mention list
-      const roleMentions = new Set();
-      const allItems = [...(data.seeds || []), ...(data.gear || []), ...(data.honey || []), ...(data.cosmetics || []), ...(data.egg || [])];
+    const roleMentions = allItems
+      .map(item => itemRoleMap?.[item.name])
+      .filter(Boolean)
+      .map(roleId => `<@&${roleId}>`);
 
-      allItems.forEach(item => {
-        const roleId = itemRoleMap?.[item.name];
-        if (roleId) roleMentions.add(`<@&${roleId}>`);
-      });
+    const mentionText = roleMentions.length ? roleMentions.join(' ') + ' Shop has been updated!' : null;
+    const embed = formatStockEmbed(data);
 
-      const content = Array.from(roleMentions).join(' ') || null;
-
-      await channel.send({ content, embeds: [embed] }).catch(console.error);
-      previousSerialized = currentSerialized;
-    }
-  }, 30000);
+    await channel.send({ content: mentionText, embeds: [embed] }).catch(console.error);
+    console.log(`[Shop] Sent updated shop message.`);
+  }, 30000); // every 30s
 }
 
 module.exports = { autoUpdateShop };

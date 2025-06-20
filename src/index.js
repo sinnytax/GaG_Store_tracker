@@ -2,7 +2,7 @@ require('dotenv').config();
 const { Client, GatewayIntentBits, Events } = require('discord.js');
 const { fetchInStockItems, formatStockEmbed } = require('./stock');
 const { autoUpdateShop } = require('./autoShopUpdate');
-const { setShopChannel, addShopRole, removeShopRole, setItemRole, removeItemRole } = require('./configManager');
+const { setShopChannel, addShopRole, removeShopRole, addItemRole, removeItemRole } = require('./configManager');
 
 const client = new Client({
     intents: [
@@ -32,23 +32,26 @@ client.on(Events.MessageCreate, async (message) => {
             setShopChannel(message.channel.id);
             message.reply(`✅ Shop updates will now post in <#${message.channel.id}>`);
             break;
-            case 'setitemrole':
-              if (!message.member.permissions.has('Administrator')) return message.reply('❌ Admins only!');
-              const role = message.mentions.roles.first();
-              const item = args.slice(1).join(' ');
-              if (!role || !item) return message.reply('❌ Usage: `!setitemrole @Role ItemName`');
-            
-              setItemRole(item, role.id);
-              return message.reply(`✅ Linked item **${item}** to role <@&${role.id}>`);
-            
-            case 'removeitemrole':
-              if (!message.member.permissions.has('Administrator')) return message.reply('❌ Admins only!');
-              const itemName = args.join(' ');
-              if (!itemName) return message.reply('❌ Usage: `!removeitemrole ItemName`');
-            
-              removeItemRole(itemName);
-              return message.reply(`✅ Removed role mapping for item **${itemName}**`);
-          
+        case 'additemrole': {
+        if (!message.member.permissions.has('Administrator')) return message.reply('❌ Admin only.');
+        
+          const [itemName, roleMention] = args;
+          const role = message.mentions.roles.first();
+          if (!itemName || !role) return message.reply('❌ Usage: `!additemrole <ItemName> @Role`');
+        
+          addItemRole(itemName, role.id);
+          return message.reply(`✅ Now pinging <@&${role.id}> when **${itemName}** is in stock.`);
+        }
+        
+        case 'removeitemrole': {
+          if (!message.member.permissions.has('Administrator')) return message.reply('❌ Admin only.');
+          const itemName = args.join(' ');
+          if (!itemName) return message.reply('❌ Usage: `!removeitemrole <ItemName>`');
+        
+          removeItemRole(itemName);
+          return message.reply(`✅ No longer pinging for **${itemName}**.`);
+        }
+
     }
   });
   
