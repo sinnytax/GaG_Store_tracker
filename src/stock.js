@@ -74,7 +74,7 @@ function formatStockEmbed(data) {
   ).join('\n') || 'No stock';
 
   const embed = new EmbedBuilder()
-    .setTitle(`Grow a Garden Stock – ${time}`)
+    .setTitle(`Grow a Garden Stock`)
     .setColor(0x57F287) // green
     .addFields(
       { name: '🌱 Seeds Stock', value: seedsField, inline: true },
